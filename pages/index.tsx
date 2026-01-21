@@ -56,6 +56,13 @@ export default function Home() {
   const [resultado, setResultado] = useState<CotizacionResponse | null>(null);
   const [error, setError] = useState("");
 
+  // Audio recording states
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const audioInputRef = useRef<HTMLInputElement>(null);
   const cotizacionRef = useRef<HTMLDivElement>(null);
@@ -104,6 +111,60 @@ export default function Home() {
     catalogo?.productos.filter(
       (p) => categoriaActiva === "todas" || p.categoria === categoriaActiva,
     ) || [];
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        const reader = new FileReader();
+        reader.onload = () => {
+          const base64 = (reader.result as string).split(",")[1];
+          setArchivoBase64(base64);
+          setNombreArchivo(`Grabacion_${new Date().toLocaleTimeString()}.webm`);
+        };
+        reader.readAsDataURL(audioBlob);
+        stream.getTracks().forEach((track) => track.stop());
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+      setRecordingTime(0);
+
+      recordingIntervalRef.current = setInterval(() => {
+        setRecordingTime((prev) => prev + 1);
+      }, 1000);
+    } catch (err) {
+      setError("No se pudo acceder al microfono. Verifica los permisos.");
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      if (recordingIntervalRef.current) {
+        clearInterval(recordingIntervalRef.current);
+        recordingIntervalRef.current = null;
+      }
+    }
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -507,27 +568,55 @@ export default function Home() {
                             </svg>
                           </button>
                         </div>
-                      ) : (
-                        <div
-                          onClick={() => audioInputRef.current?.click()}
-                          className="border-2 border-dashed border-gray-300 rounded-md p-6 text-center cursor-pointer hover:border-blue-500 hover:bg-gray-50 transition-all"
-                        >
-                          <svg
-                            className="w-10 h-10 mx-auto mb-3 text-gray-400"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
+                      ) : isRecording ? (
+                        <div className="text-center py-4">
+                          <div className="flex items-center justify-center gap-3 mb-4">
+                            <span className="relative flex h-4 w-4">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-4 w-4 bg-red-500"></span>
+                            </span>
+                            <span className="text-2xl font-mono text-gray-800">
+                              {formatTime(recordingTime)}
+                            </span>
+                          </div>
+                          <p className="text-gray-500 text-sm mb-4">Grabando...</p>
+                          <button
+                            onClick={stopRecording}
+                            className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
                           >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={1.5}
-                              d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
-                            />
-                          </svg>
-                          <p className="text-gray-500 text-sm">
-                            Haz clic para subir un audio
+                            Detener grabacion
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="text-center py-4">
+                          <button
+                            onClick={startRecording}
+                            className="w-20 h-20 mx-auto mb-4 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center transition-colors group"
+                          >
+                            <svg
+                              className="w-8 h-8 text-white"
+                              fill="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
+                              <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
+                            </svg>
+                          </button>
+                          <p className="text-gray-600 font-medium mb-1">
+                            Grabar audio
                           </p>
+                          <p className="text-gray-400 text-sm mb-4">
+                            Haz clic en el boton para comenzar
+                          </p>
+                          <div className="flex items-center justify-center gap-2 text-gray-400 text-xs">
+                            <span>o</span>
+                          </div>
+                          <button
+                            onClick={() => audioInputRef.current?.click()}
+                            className="mt-3 text-blue-600 hover:text-blue-700 text-sm font-medium"
+                          >
+                            Subir archivo de audio
+                          </button>
                         </div>
                       )}
                     </>
