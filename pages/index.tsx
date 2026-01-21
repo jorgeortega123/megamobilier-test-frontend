@@ -36,7 +36,9 @@ interface CotizacionResponse {
   };
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://megamobilier-test.llampukaq.workers.dev";
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  "https://megamobilier-test.llampukaq.workers.dev";
 
 export default function Home() {
   const [catalogo, setCatalogo] = useState<CatalogoResponse | null>(null);
@@ -98,9 +100,10 @@ export default function Home() {
     fetchCatalogo();
   }, []);
 
-  const productosFiltrados = catalogo?.productos.filter(
-    (p) => categoriaActiva === "todas" || p.categoria === categoriaActiva
-  ) || [];
+  const productosFiltrados =
+    catalogo?.productos.filter(
+      (p) => categoriaActiva === "todas" || p.categoria === categoriaActiva,
+    ) || [];
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -116,11 +119,6 @@ export default function Home() {
   };
 
   const handleSubmit = async () => {
-    if (!nombre.trim()) {
-      setError("El nombre es requerido");
-      return;
-    }
-
     let requerimiento = "";
     if (formato === "text") {
       if (!textoRequerimiento.trim()) {
@@ -130,7 +128,9 @@ export default function Home() {
       requerimiento = textoRequerimiento;
     } else {
       if (!archivoBase64) {
-        setError(`Selecciona un archivo de ${formato === "image" ? "imagen" : "audio"}`);
+        setError(
+          `Selecciona un archivo de ${formato === "image" ? "imagen" : "audio"}`,
+        );
         return;
       }
       requerimiento = archivoBase64;
@@ -146,11 +146,11 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           data: {
-            nombre,
+            nombre: nombre ?? "No indicado",
             requerimiento,
             formato,
-            email: email || undefined,
-            ciudad: ciudad || undefined,
+            email: email || "No indicado",
+            ciudad: ciudad || "No indicado",
             ingresoFecha: new Date().toISOString(),
           },
         }),
@@ -185,8 +185,12 @@ export default function Home() {
       <header className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-semibold text-gray-800">MegaMobilier</h1>
-            <p className="text-gray-500 text-sm">Cotizador inteligente de mobiliario</p>
+            <h1 className="text-2xl font-semibold text-gray-800">
+              MegaMobilier
+            </h1>
+            <p className="text-gray-500 text-sm">
+              Cotizador inteligente de mobiliario
+            </p>
           </div>
         </div>
       </header>
@@ -196,7 +200,9 @@ export default function Home() {
           {/* Columna Izquierda - Catalogo */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
             <div className="p-6 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-800 mb-4">Catalogo de Productos</h2>
+              <h2 className="text-lg font-semibold text-gray-800 mb-4">
+                Catalogo de Productos
+              </h2>
 
               {/* Filtro de categorias */}
               <div className="flex flex-wrap gap-2">
@@ -229,9 +235,24 @@ export default function Home() {
             <div className="p-6 max-h-[600px] overflow-y-auto">
               {loadingCatalogo ? (
                 <div className="flex items-center justify-center py-12">
-                  <svg className="w-8 h-8 animate-spin text-blue-600" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  <svg
+                    className="w-8 h-8 animate-spin text-blue-600"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                      fill="none"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
                   </svg>
                 </div>
               ) : (
@@ -242,10 +263,16 @@ export default function Home() {
                       className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                     >
                       <div className="flex-1">
-                        <h3 className="font-medium text-gray-800">{producto.nombre}</h3>
-                        <p className="text-sm text-gray-500">{producto.categoria}</p>
+                        <h3 className="font-medium text-gray-800">
+                          {producto.nombre}
+                        </h3>
+                        <p className="text-sm text-gray-500">
+                          {producto.categoria}
+                        </p>
                         {producto.descripcion && (
-                          <p className="text-xs text-gray-400 mt-1">{producto.descripcion}</p>
+                          <p className="text-xs text-gray-400 mt-1">
+                            {producto.descripcion}
+                          </p>
                         )}
                       </div>
                       <div className="text-right">
@@ -256,7 +283,9 @@ export default function Home() {
                     </div>
                   ))}
                   {productosFiltrados.length === 0 && (
-                    <p className="text-center text-gray-500 py-8">No hay productos en esta categoria</p>
+                    <p className="text-center text-gray-500 py-8">
+                      No hay productos en esta categoria
+                    </p>
                   )}
                 </div>
               )}
@@ -265,7 +294,8 @@ export default function Home() {
             {catalogo && (
               <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
                 <p className="text-sm text-gray-500">
-                  Mostrando {productosFiltrados.length} de {catalogo.total} productos
+                  Mostrando {productosFiltrados.length} de {catalogo.total}{" "}
+                  productos
                 </p>
               </div>
             )}
@@ -273,7 +303,9 @@ export default function Home() {
 
           {/* Columna Derecha - Cotizador */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-            <h2 className="text-lg font-semibold text-gray-800 mb-6">Solicitar Cotizacion</h2>
+            <h2 className="text-lg font-semibold text-gray-800 mb-6">
+              Solicitar Cotizacion
+            </h2>
 
             {!resultado ? (
               <>
@@ -295,21 +327,55 @@ export default function Home() {
                       }`}
                     >
                       {f === "text" && (
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                          />
                         </svg>
                       )}
                       {f === "image" && (
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          />
                         </svg>
                       )}
                       {f === "audio" && (
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
+                          />
                         </svg>
                       )}
-                      {f === "text" ? "Texto" : f === "image" ? "Imagen" : "Audio"}
+                      {f === "text"
+                        ? "Texto"
+                        : f === "image"
+                          ? "Imagen"
+                          : "Audio"}
                     </button>
                   ))}
                 </div>
@@ -334,16 +400,39 @@ export default function Home() {
                       />
                       {archivoBase64 ? (
                         <div className="flex items-center justify-center gap-3 py-3">
-                          <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          <svg
+                            className="w-5 h-5 text-green-600"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M5 13l4 4L19 7"
+                            />
                           </svg>
                           <span className="text-gray-700">{nombreArchivo}</span>
                           <button
-                            onClick={() => { setArchivoBase64(""); setNombreArchivo(""); }}
+                            onClick={() => {
+                              setArchivoBase64("");
+                              setNombreArchivo("");
+                            }}
                             className="text-red-500 hover:text-red-700"
                           >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M6 18L18 6M6 6l12 12"
+                              />
                             </svg>
                           </button>
                         </div>
@@ -352,10 +441,22 @@ export default function Home() {
                           onClick={() => fileInputRef.current?.click()}
                           className="border-2 border-dashed border-gray-300 rounded-md p-6 text-center cursor-pointer hover:border-blue-500 hover:bg-gray-50 transition-all"
                         >
-                          <svg className="w-10 h-10 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          <svg
+                            className="w-10 h-10 mx-auto mb-3 text-gray-400"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={1.5}
+                              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                            />
                           </svg>
-                          <p className="text-gray-500 text-sm">Haz clic para subir una imagen</p>
+                          <p className="text-gray-500 text-sm">
+                            Haz clic para subir una imagen
+                          </p>
                         </div>
                       )}
                     </>
@@ -370,16 +471,39 @@ export default function Home() {
                       />
                       {archivoBase64 ? (
                         <div className="flex items-center justify-center gap-3 py-3">
-                          <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          <svg
+                            className="w-5 h-5 text-green-600"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M5 13l4 4L19 7"
+                            />
                           </svg>
                           <span className="text-gray-700">{nombreArchivo}</span>
                           <button
-                            onClick={() => { setArchivoBase64(""); setNombreArchivo(""); }}
+                            onClick={() => {
+                              setArchivoBase64("");
+                              setNombreArchivo("");
+                            }}
                             className="text-red-500 hover:text-red-700"
                           >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M6 18L18 6M6 6l12 12"
+                              />
                             </svg>
                           </button>
                         </div>
@@ -388,10 +512,22 @@ export default function Home() {
                           onClick={() => audioInputRef.current?.click()}
                           className="border-2 border-dashed border-gray-300 rounded-md p-6 text-center cursor-pointer hover:border-blue-500 hover:bg-gray-50 transition-all"
                         >
-                          <svg className="w-10 h-10 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                          <svg
+                            className="w-10 h-10 mx-auto mb-3 text-gray-400"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={1.5}
+                              d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
+                            />
                           </svg>
-                          <p className="text-gray-500 text-sm">Haz clic para subir un audio</p>
+                          <p className="text-gray-500 text-sm">
+                            Haz clic para subir un audio
+                          </p>
                         </div>
                       )}
                     </>
@@ -439,9 +575,24 @@ export default function Home() {
                   className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-70 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors"
                 >
                   {loading && (
-                    <svg className="inline w-5 h-5 mr-2 animate-spin" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    <svg
+                      className="inline w-5 h-5 mr-2 animate-spin"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        fill="none"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
                     </svg>
                   )}
                   {loading ? "Procesando..." : "Obtener Cotizacion"}
@@ -450,34 +601,56 @@ export default function Home() {
             ) : (
               /* Resultado */
               <div>
-                <div ref={cotizacionRef} className="border border-gray-200 rounded-lg overflow-hidden bg-white">
+                <div
+                  ref={cotizacionRef}
+                  className="border border-gray-200 rounded-lg overflow-hidden bg-white"
+                >
                   <div className="bg-gray-800 text-white p-6">
                     <h2 className="text-xl font-semibold mb-1">Cotizacion</h2>
-                    <p className="text-gray-300 text-sm">Cliente: {resultado.cliente} | Fecha: {resultado.fecha}</p>
+                    <p className="text-gray-300 text-sm">
+                      Cliente: {resultado.cliente} | Fecha: {resultado.fecha}
+                    </p>
                   </div>
 
                   {resultado.debug?.textoInterpretado && (
                     <div className="bg-blue-50 border-l-4 border-blue-500 p-4 m-5 text-sm text-blue-800">
-                      <strong>Interpretado:</strong> {resultado.debug.textoInterpretado}
+                      <strong>Interpretado:</strong>{" "}
+                      {resultado.debug.textoInterpretado}
                     </div>
                   )}
 
                   <table className="w-full">
                     <thead>
                       <tr className="bg-gray-50 border-b border-gray-200">
-                        <th className="text-left py-3 px-5 text-xs font-semibold text-gray-500 uppercase">Producto</th>
-                        <th className="text-center py-3 px-5 text-xs font-semibold text-gray-500 uppercase">Cant.</th>
-                        <th className="text-right py-3 px-5 text-xs font-semibold text-gray-500 uppercase">P. Unit.</th>
-                        <th className="text-right py-3 px-5 text-xs font-semibold text-gray-500 uppercase">Subtotal</th>
+                        <th className="text-left py-3 px-5 text-xs font-semibold text-gray-500 uppercase">
+                          Producto
+                        </th>
+                        <th className="text-center py-3 px-5 text-xs font-semibold text-gray-500 uppercase">
+                          Cant.
+                        </th>
+                        <th className="text-right py-3 px-5 text-xs font-semibold text-gray-500 uppercase">
+                          P. Unit.
+                        </th>
+                        <th className="text-right py-3 px-5 text-xs font-semibold text-gray-500 uppercase">
+                          Subtotal
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
                       {resultado.items.map((item, idx) => (
                         <tr key={idx} className="border-b border-gray-100">
-                          <td className="py-4 px-5 text-sm text-gray-700">{item.nombre}</td>
-                          <td className="py-4 px-5 text-sm text-gray-700 text-center">{item.cantidad}</td>
-                          <td className="py-4 px-5 text-sm text-gray-700 text-right">${item.precioUnitario.toFixed(2)}</td>
-                          <td className="py-4 px-5 text-sm text-gray-700 text-right">${item.subtotal.toFixed(2)}</td>
+                          <td className="py-4 px-5 text-sm text-gray-700">
+                            {item.nombre}
+                          </td>
+                          <td className="py-4 px-5 text-sm text-gray-700 text-center">
+                            {item.cantidad}
+                          </td>
+                          <td className="py-4 px-5 text-sm text-gray-700 text-right">
+                            ${item.precioUnitario.toFixed(2)}
+                          </td>
+                          <td className="py-4 px-5 text-sm text-gray-700 text-right">
+                            ${item.subtotal.toFixed(2)}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -504,8 +677,18 @@ export default function Home() {
                     onClick={handleDownloadPDF}
                     className="flex-1 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
                     </svg>
                     Guardar PDF
                   </button>
