@@ -1,6 +1,4 @@
 import { useState, useRef, useEffect } from "react";
-import html2canvas from "html2canvas";
-import { jsPDF } from "jspdf";
 
 type InputFormat = "text" | "image" | "audio";
 
@@ -55,6 +53,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [resultado, setResultado] = useState<CotizacionResponse | null>(null);
   const [error, setError] = useState("");
+  const [generatingPDF, setGeneratingPDF] = useState(false);
 
   // Audio recording states
   const [isRecording, setIsRecording] = useState(false);
@@ -68,28 +67,46 @@ export default function Home() {
   const cotizacionRef = useRef<HTMLDivElement>(null);
 
   const handleDownloadPDF = async () => {
-    if (!cotizacionRef.current || !resultado) return;
+    if (!cotizacionRef.current || !resultado) {
+      console.error("No hay referencia o resultado");
+      return;
+    }
 
-    const canvas = await html2canvas(cotizacionRef.current, {
-      scale: 2,
-      useCORS: true,
-      backgroundColor: "#ffffff",
-    });
+    setGeneratingPDF(true);
 
-    const imgData = canvas.toDataURL("image/png");
-    const pdf = new jsPDF({
-      orientation: "portrait",
-      unit: "mm",
-      format: "a4",
-    });
+    try {
+      // Dynamic imports for client-side only
+      const html2canvas = (await import("html2canvas")).default;
+      const { jsPDF } = await import("jspdf");
 
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      const canvas = await html2canvas(cotizacionRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        logging: false,
+      });
 
-    pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
 
-    const fileName = `Cotizacion_${resultado.cliente.replace(/\s+/g, "_")}_${new Date().toISOString().split("T")[0]}.pdf`;
-    pdf.save(fileName);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+
+      const clienteName = resultado.cliente?.replace(/\s+/g, "_") || "Cliente";
+      const fileName = `Cotizacion_${clienteName}_${new Date().toISOString().split("T")[0]}.pdf`;
+      pdf.save(fileName);
+    } catch (err) {
+      console.error("Error generando PDF:", err);
+      setError("Error al generar el PDF. Intenta de nuevo.");
+    } finally {
+      setGeneratingPDF(false);
+    }
   };
 
   useEffect(() => {
@@ -207,7 +224,7 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           data: {
-            nombre: nombre ?? "No indicado",
+            nombre: nombre || "No indicado",
             requerimiento,
             formato,
             email: email || "No indicado",
@@ -629,7 +646,7 @@ export default function Home() {
                     type="text"
                     value={nombre}
                     onChange={(e) => setNombre(e.target.value)}
-                    placeholder="Tu nombre *"
+                    placeholder="Tu nombre (Opcional)"
                     className="px-4 py-3 border border-gray-300 rounded-lg text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
                   />
                   <div className="grid grid-cols-2 gap-3">
@@ -692,52 +709,52 @@ export default function Home() {
               <div>
                 <div
                   ref={cotizacionRef}
-                  className="border border-gray-200 rounded-lg overflow-hidden bg-white"
+                  style={{ backgroundColor: "#ffffff", border: "1px solid #e5e7eb", borderRadius: "8px", overflow: "hidden" }}
                 >
-                  <div className="bg-gray-800 text-white p-6">
-                    <h2 className="text-xl font-semibold mb-1">Cotizacion</h2>
-                    <p className="text-gray-300 text-sm">
+                  <div style={{ backgroundColor: "#1f2937", color: "#ffffff", padding: "24px" }}>
+                    <h2 style={{ fontSize: "20px", fontWeight: "600", marginBottom: "4px" }}>Cotizacion</h2>
+                    <p style={{ color: "#d1d5db", fontSize: "14px" }}>
                       Cliente: {resultado.cliente} | Fecha: {resultado.fecha}
                     </p>
                   </div>
 
                   {resultado.debug?.textoInterpretado && (
-                    <div className="bg-blue-50 border-l-4 border-blue-500 p-4 m-5 text-sm text-blue-800">
+                    <div style={{ backgroundColor: "#eff6ff", borderLeft: "4px solid #3b82f6", padding: "16px", margin: "20px", fontSize: "14px", color: "#1e40af" }}>
                       <strong>Interpretado:</strong>{" "}
                       {resultado.debug.textoInterpretado}
                     </div>
                   )}
 
-                  <table className="w-full">
+                  <table style={{ width: "100%", borderCollapse: "collapse" }}>
                     <thead>
-                      <tr className="bg-gray-50 border-b border-gray-200">
-                        <th className="text-left py-3 px-5 text-xs font-semibold text-gray-500 uppercase">
+                      <tr style={{ backgroundColor: "#f9fafb", borderBottom: "1px solid #e5e7eb" }}>
+                        <th style={{ textAlign: "left", padding: "12px 20px", fontSize: "12px", fontWeight: "600", color: "#6b7280", textTransform: "uppercase" }}>
                           Producto
                         </th>
-                        <th className="text-center py-3 px-5 text-xs font-semibold text-gray-500 uppercase">
+                        <th style={{ textAlign: "center", padding: "12px 20px", fontSize: "12px", fontWeight: "600", color: "#6b7280", textTransform: "uppercase" }}>
                           Cant.
                         </th>
-                        <th className="text-right py-3 px-5 text-xs font-semibold text-gray-500 uppercase">
+                        <th style={{ textAlign: "right", padding: "12px 20px", fontSize: "12px", fontWeight: "600", color: "#6b7280", textTransform: "uppercase" }}>
                           P. Unit.
                         </th>
-                        <th className="text-right py-3 px-5 text-xs font-semibold text-gray-500 uppercase">
+                        <th style={{ textAlign: "right", padding: "12px 20px", fontSize: "12px", fontWeight: "600", color: "#6b7280", textTransform: "uppercase" }}>
                           Subtotal
                         </th>
                       </tr>
                     </thead>
                     <tbody>
                       {resultado.items.map((item, idx) => (
-                        <tr key={idx} className="border-b border-gray-100">
-                          <td className="py-4 px-5 text-sm text-gray-700">
+                        <tr key={idx} style={{ borderBottom: "1px solid #f3f4f6" }}>
+                          <td style={{ padding: "16px 20px", fontSize: "14px", color: "#374151" }}>
                             {item.nombre}
                           </td>
-                          <td className="py-4 px-5 text-sm text-gray-700 text-center">
+                          <td style={{ padding: "16px 20px", fontSize: "14px", color: "#374151", textAlign: "center" }}>
                             {item.cantidad}
                           </td>
-                          <td className="py-4 px-5 text-sm text-gray-700 text-right">
+                          <td style={{ padding: "16px 20px", fontSize: "14px", color: "#374151", textAlign: "right" }}>
                             ${item.precioUnitario.toFixed(2)}
                           </td>
-                          <td className="py-4 px-5 text-sm text-gray-700 text-right">
+                          <td style={{ padding: "16px 20px", fontSize: "14px", color: "#374151", textAlign: "right" }}>
                             ${item.subtotal.toFixed(2)}
                           </td>
                         </tr>
@@ -745,16 +762,16 @@ export default function Home() {
                     </tbody>
                   </table>
 
-                  <div className="bg-gray-50 p-5 border-t border-gray-200">
-                    <div className="flex justify-between py-1 text-sm text-gray-600">
+                  <div style={{ backgroundColor: "#f9fafb", padding: "20px", borderTop: "1px solid #e5e7eb" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", padding: "4px 0", fontSize: "14px", color: "#4b5563" }}>
                       <span>Subtotal</span>
                       <span>${resultado.subtotal.toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between py-1 text-sm text-gray-600">
+                    <div style={{ display: "flex", justifyContent: "space-between", padding: "4px 0", fontSize: "14px", color: "#4b5563" }}>
                       <span>IVA</span>
                       <span>${resultado.iva.toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between pt-3 mt-2 border-t border-gray-200 text-lg font-semibold text-green-600">
+                    <div style={{ display: "flex", justifyContent: "space-between", paddingTop: "12px", marginTop: "8px", borderTop: "1px solid #e5e7eb", fontSize: "18px", fontWeight: "600", color: "#16a34a" }}>
                       <span>Total</span>
                       <span>${resultado.total.toFixed(2)}</span>
                     </div>
@@ -764,22 +781,50 @@ export default function Home() {
                 <div className="flex gap-3 mt-5">
                   <button
                     onClick={handleDownloadPDF}
-                    className="flex-1 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                    disabled={generatingPDF}
+                    className="flex-1 py-3 bg-green-600 hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
                   >
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                      />
-                    </svg>
-                    Guardar PDF
+                    {generatingPDF ? (
+                      <>
+                        <svg
+                          className="w-5 h-5 animate-spin"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                            fill="none"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          />
+                        </svg>
+                        Generando...
+                      </>
+                    ) : (
+                      <>
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                          />
+                        </svg>
+                        Guardar PDF
+                      </>
+                    )}
                   </button>
                   <button
                     onClick={resetForm}
