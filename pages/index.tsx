@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect } from "react";
+import html2canvas from "html2canvas";
+import { jsPDF } from "jspdf";
 
 type InputFormat = "text" | "image" | "audio";
 
@@ -54,6 +56,32 @@ export default function Home() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const audioInputRef = useRef<HTMLInputElement>(null);
+  const cotizacionRef = useRef<HTMLDivElement>(null);
+
+  const handleDownloadPDF = async () => {
+    if (!cotizacionRef.current || !resultado) return;
+
+    const canvas = await html2canvas(cotizacionRef.current, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: "#ffffff",
+    });
+
+    const imgData = canvas.toDataURL("image/png");
+    const pdf = new jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: "a4",
+    });
+
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+    pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+
+    const fileName = `Cotizacion_${resultado.cliente.replace(/\s+/g, "_")}_${new Date().toISOString().split("T")[0]}.pdf`;
+    pdf.save(fileName);
+  };
 
   useEffect(() => {
     const fetchCatalogo = async () => {
@@ -421,58 +449,69 @@ export default function Home() {
               </>
             ) : (
               /* Resultado */
-              <div className="border border-gray-200 rounded-lg overflow-hidden">
-                <div className="bg-gray-800 text-white p-6">
-                  <h2 className="text-xl font-semibold mb-1">Cotizacion</h2>
-                  <p className="text-gray-300 text-sm">Cliente: {resultado.cliente} | Fecha: {resultado.fecha}</p>
-                </div>
-
-                {resultado.debug?.textoInterpretado && (
-                  <div className="bg-blue-50 border-l-4 border-blue-500 p-4 m-5 text-sm text-blue-800">
-                    <strong>Interpretado:</strong> {resultado.debug.textoInterpretado}
+              <div>
+                <div ref={cotizacionRef} className="border border-gray-200 rounded-lg overflow-hidden bg-white">
+                  <div className="bg-gray-800 text-white p-6">
+                    <h2 className="text-xl font-semibold mb-1">Cotizacion</h2>
+                    <p className="text-gray-300 text-sm">Cliente: {resultado.cliente} | Fecha: {resultado.fecha}</p>
                   </div>
-                )}
 
-                <table className="w-full">
-                  <thead>
-                    <tr className="bg-gray-50 border-b border-gray-200">
-                      <th className="text-left py-3 px-5 text-xs font-semibold text-gray-500 uppercase">Producto</th>
-                      <th className="text-center py-3 px-5 text-xs font-semibold text-gray-500 uppercase">Cant.</th>
-                      <th className="text-right py-3 px-5 text-xs font-semibold text-gray-500 uppercase">P. Unit.</th>
-                      <th className="text-right py-3 px-5 text-xs font-semibold text-gray-500 uppercase">Subtotal</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {resultado.items.map((item, idx) => (
-                      <tr key={idx} className="border-b border-gray-100">
-                        <td className="py-4 px-5 text-sm text-gray-700">{item.nombre}</td>
-                        <td className="py-4 px-5 text-sm text-gray-700 text-center">{item.cantidad}</td>
-                        <td className="py-4 px-5 text-sm text-gray-700 text-right">${item.precioUnitario.toFixed(2)}</td>
-                        <td className="py-4 px-5 text-sm text-gray-700 text-right">${item.subtotal.toFixed(2)}</td>
+                  {resultado.debug?.textoInterpretado && (
+                    <div className="bg-blue-50 border-l-4 border-blue-500 p-4 m-5 text-sm text-blue-800">
+                      <strong>Interpretado:</strong> {resultado.debug.textoInterpretado}
+                    </div>
+                  )}
+
+                  <table className="w-full">
+                    <thead>
+                      <tr className="bg-gray-50 border-b border-gray-200">
+                        <th className="text-left py-3 px-5 text-xs font-semibold text-gray-500 uppercase">Producto</th>
+                        <th className="text-center py-3 px-5 text-xs font-semibold text-gray-500 uppercase">Cant.</th>
+                        <th className="text-right py-3 px-5 text-xs font-semibold text-gray-500 uppercase">P. Unit.</th>
+                        <th className="text-right py-3 px-5 text-xs font-semibold text-gray-500 uppercase">Subtotal</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {resultado.items.map((item, idx) => (
+                        <tr key={idx} className="border-b border-gray-100">
+                          <td className="py-4 px-5 text-sm text-gray-700">{item.nombre}</td>
+                          <td className="py-4 px-5 text-sm text-gray-700 text-center">{item.cantidad}</td>
+                          <td className="py-4 px-5 text-sm text-gray-700 text-right">${item.precioUnitario.toFixed(2)}</td>
+                          <td className="py-4 px-5 text-sm text-gray-700 text-right">${item.subtotal.toFixed(2)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
 
-                <div className="bg-gray-50 p-5 border-t border-gray-200">
-                  <div className="flex justify-between py-1 text-sm text-gray-600">
-                    <span>Subtotal</span>
-                    <span>${resultado.subtotal.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between py-1 text-sm text-gray-600">
-                    <span>IVA</span>
-                    <span>${resultado.iva.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between pt-3 mt-2 border-t border-gray-200 text-lg font-semibold text-green-600">
-                    <span>Total</span>
-                    <span>${resultado.total.toFixed(2)}</span>
+                  <div className="bg-gray-50 p-5 border-t border-gray-200">
+                    <div className="flex justify-between py-1 text-sm text-gray-600">
+                      <span>Subtotal</span>
+                      <span>${resultado.subtotal.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between py-1 text-sm text-gray-600">
+                      <span>IVA</span>
+                      <span>${resultado.iva.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between pt-3 mt-2 border-t border-gray-200 text-lg font-semibold text-green-600">
+                      <span>Total</span>
+                      <span>${resultado.total.toFixed(2)}</span>
+                    </div>
                   </div>
                 </div>
 
-                <div className="p-5">
+                <div className="flex gap-3 mt-5">
+                  <button
+                    onClick={handleDownloadPDF}
+                    className="flex-1 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Guardar PDF
+                  </button>
                   <button
                     onClick={resetForm}
-                    className="w-full py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+                    className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
                   >
                     Nueva Cotizacion
                   </button>
@@ -483,7 +522,7 @@ export default function Home() {
         </div>
 
         <p className="text-center mt-8 text-gray-400 text-xs">
-          MegaMobilier - Potenciado por IA
+          MegaMobilier - Prueba ténica Jorge Ortega
         </p>
       </div>
     </div>
